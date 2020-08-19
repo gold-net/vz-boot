@@ -1,0 +1,12 @@
+${AnsiColor.BRIGHT_BLUE}
+__________        ___.                  __
+\____    /        \_ |__   ____   _____/  |_
+  /     /   ______ | __ \ /  _ \ /  _ \   __\
+ /     /_  /_____/ | \_\ (  <_> |  <_> )  |
+/_______ \         |___  /\____/ \____/|__|
+        \/             \/
+
+${AnsiColor.BRIGHT_GREEN}
+Z-Boot Version: 1.0.0
+Spring Boot Version: ${spring-boot.version}${spring-boot.formatted-version}
+${AnsiColor.BLACK}

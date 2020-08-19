@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.z.modules.system.mapper.SysUserMapper">
+
+	<!-- 根据用户名查询 -->
+	<select id="getUserByName" resultType="org.z.modules.system.entity.SysUser">
+		select * from  sys_user  where username = #{username} and del_flag = 0
+	</select>
+
+	<!-- 根据部门Id查询 -->
+	<select id="getUserByDepId" resultType="org.z.modules.system.entity.SysUser">
+		select * from sys_user where del_flag = 0 and id in (select user_id from sys_user_depart where dep_id=#{departId})
+		<if test="username!=null and username!=''">
+			and username = #{username}
+		</if>
+	</select>
+
+	<!-- 通过多个部门IDS，查询部门下的用户信息 -->
+	<select id="getUserByDepIds" resultType="org.z.modules.system.entity.SysUser">
+		select * from sys_user where del_flag = 0
+		<if test="departIds!=null  and departIds.size()>0">
+			and id in (select user_id from sys_user_depart where dep_id in
+			<foreach collection="departIds" index="index" item="id" open="(" separator="," close=")">
+				#{id}
+			</foreach>
+			)
+		</if>
+		<if test="username!=null and username!=''">
+			and username = #{username}
+		</if>
+	</select>
+
+	<!-- 根据角色Id查询 -->
+	<select id="getUserByRoleId" resultType="org.z.modules.system.entity.SysUser">
+		select * from sys_user where del_flag = 0 and id in (select user_id from sys_user_role where role_id=#{roleId})
+		<if test="username!=null and username!=''">
+			and username = #{username}
+		</if>
+	</select>
+
+	<!--  修改用户部门code -->
+	<update id="updateUserDepart">
+		UPDATE sys_user SET org_code = #{orgCode} where username = #{username}
+	</update>
+
+	<!-- 根据手机号查询 -->
+	<select id="getUserByPhone"  resultType="org.z.modules.system.entity.SysUser">
+		select * from  sys_user  where phone = #{phone} and del_flag = 0
+	</select>
+
+	<!-- 根据邮箱查询用户信息 -->
+	<select id="getUserByEmail" resultType="org.z.modules.system.entity.SysUser">
+	select * from  sys_user  where email = #{email} and del_flag = 0
+	</select>
+
+
+	<!-- 批量删除角色的与用户关系-->
+	<update id="deleteBathRoleUserRelation">
+		delete from sys_user_role
+		where role_id in
+		<foreach item="id" collection="roleIdArray" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</update>
+	<!-- 批量删除角色的与权限关系-->
+	<update id="deleteBathRolePermissionRelation">
+		delete from sys_role_permission
+		where role_id in
+		<foreach item="id" collection="roleIdArray" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</update>
+
+	<!-- 查询被逻辑删除的用户 -->
+	<select id="selectLogicDeleted" resultType="org.z.modules.system.entity.SysUser">
+		SELECT * FROM sys_user ${ew.customSqlSegment}
+	</select>
+
+	<!-- 更新被逻辑删除的用户 -->
+	<update id="revertLogicDeleted">
+		UPDATE
+			sys_user
+		SET
+			del_flag = 0,
+			update_by = #{entity.updateBy},
+			update_time = #{entity.updateTime}
+		WHERE
+			del_flag = 1
+			AND id IN (#{userIds})
+	</update>
+
+	<!-- 彻底删除被逻辑删除的用户 -->
+	<delete id="deleteLogicDeleted">
+		DELETE FROM sys_user WHERE del_flag = 1 AND id IN
+		<foreach collection="userIds" index="index" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+	<!-- 通过多个部门IDS，查询部门下的用户信息 -->
+	<select id="queryByDepIds" resultType="org.z.modules.system.entity.SysUser">
+		select * from sys_user where del_flag = 0
+		<if test="departIds!=null  and departIds.size()>0">
+			and id in (select user_id from sys_user_depart where dep_id in
+			<foreach collection="departIds" index="index" item="id" open="(" separator="," close=")">
+				#{id}
+			</foreach>
+			)
+		</if>
+		<if test="username!=null and username!=''">
+			and username != #{username}
+		</if>
+	</select>
+</mapper>
