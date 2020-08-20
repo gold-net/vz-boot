@@ -376,7 +376,7 @@
           this.menuLabel = '按钮/权限';
         }else{
           this.show = true;
-          this.menuLabel = '菜单名称';
+          this.menuLabel = '组件名称';
         }
         this.$nextTick(() => {
           this.form.validateFields(['url','component'], { force: true });
