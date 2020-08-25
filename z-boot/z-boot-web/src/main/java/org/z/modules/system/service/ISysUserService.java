@@ -1,9 +1,9 @@
 package org.z.modules.system.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.z.common.system.vo.LoginUser;
 import org.z.common.system.vo.Result;
 import org.z.modules.system.entity.SysUser;
 
@@ -62,6 +62,14 @@ public interface ISysUserService extends IService<SysUser> {
      * @return
      */
     SysUser getUserByName(String username);
+
+    /**
+     * 用户名获取登录用户
+     *
+     * @param username
+     * @return
+     */
+    LoginUser getLoginUserByName(String username);
 
     /**
      * 添加用户和用户角色关系
@@ -135,11 +143,6 @@ public interface ISysUserService extends IService<SysUser> {
      * 查询被逻辑删除的用户
      */
     List<SysUser> queryLogicDeleted();
-
-    /**
-     * 查询被逻辑删除的用户（可拼装查询条件）
-     */
-    List<SysUser> queryLogicDeleted(LambdaQueryWrapper<SysUser> wrapper);
 
     /**
      * 还原被逻辑删除的用户

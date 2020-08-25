@@ -8,14 +8,15 @@ import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
+import org.z.common.constant.CacheConstant;
 import org.z.common.constant.CommonConstant;
 import org.z.common.system.vo.LoginUser;
 import org.z.common.system.vo.Result;
 import org.z.common.util.*;
-import org.z.component.cache.ZCacheManager;
+import org.z.component.cache.ZCache;
+import org.z.modules.shiro.ShiroUtils;
 import org.z.modules.system.entity.SysUser;
 import org.z.modules.system.model.SysLoginModel;
-import org.z.modules.system.service.ISysBaseAPI;
 import org.z.modules.system.service.ISysDictService;
 import org.z.modules.system.service.ISysLogService;
 import org.z.modules.system.service.ISysUserService;
@@ -36,13 +37,11 @@ public class LoginController {
     @Autowired
     private ISysUserService sysUserService;
     @Autowired
-    private ISysBaseAPI sysBaseAPI;
-    @Autowired
     private ISysLogService logService;
     @Autowired
     private ISysDictService sysDictService;
     @Autowired
-    private ZCacheManager cacheManager;
+    private ZCache zCache;
 
 
     @ApiOperation("登录接口")
@@ -58,7 +57,7 @@ public class LoginController {
         }
         String lowerCaseCaptcha = captcha.toLowerCase();
         String realKey = DigestUtils.md5DigestAsHex((lowerCaseCaptcha + sysLoginModel.getCheckKey()).getBytes());
-        Object checkCode = cacheManager.get(realKey);
+        String checkCode = zCache.get(realKey, String.class);
         if (checkCode == null || !checkCode.equals(lowerCaseCaptcha)) {
             return Result.error("验证码错误");
         }
@@ -79,7 +78,7 @@ public class LoginController {
 
         //用户登录信息
         userInfo(sysUser, result);
-        sysBaseAPI.addLog("用户: " + sysUser.getRealname() + ",登录成功！", CommonConstant.LOG_TYPE_1,
+        logService.addLog("用户: " + sysUser.getRealname() + ",登录成功！", CommonConstant.LOG_TYPE_1,
                 null, sysUser);
 
         return result;
@@ -88,7 +87,7 @@ public class LoginController {
     /**
      * 退出登录
      *
-     * @param request  HttpServletRequest
+     * @param request HttpServletRequest
      * @return Result<Object>
      */
     @RequestMapping(value = "/logout")
@@ -96,23 +95,22 @@ public class LoginController {
         //用户退出逻辑
         String token = request.getHeader(CommonConstant.X_ACCESS_TOKEN);
         if (StringUtils.isEmpty(token)) {
-            return Result.error("退出登录失败！");
+            return Result.error("token不能是空！");
         }
-        String username = JwtUtil.getUsername(token);
-        LoginUser sysUser = sysBaseAPI.getUserByName(username);
+        LoginUser sysUser = ShiroUtils.getLoginUser();
         if (sysUser != null) {
-            sysBaseAPI.addLog("用户: " + sysUser.getRealname() + ",退出成功！", CommonConstant.LOG_TYPE_1,
+            logService.addLog("用户: " + sysUser.getRealname() + ",退出成功！", CommonConstant.LOG_TYPE_1,
                     null, null);
             log.info(" 用户名:  " + sysUser.getRealname() + ",退出成功！ ");
             //清空用户登录Token缓存
-            cacheManager.del(CommonConstant.PREFIX_USER_TOKEN + token);
+            zCache.evict(CacheConstant.PREFIX_USER_TOKEN + token);
             //清空用户登录Shiro权限缓存
-            cacheManager.del(CommonConstant.PREFIX_USER_SHIRO_CACHE + sysUser.getId());
+            zCache.evict(CacheConstant.PREFIX_USER_SHIRO_CACHE + sysUser.getId());
             //调用shiro的logout
             SecurityUtils.getSubject().logout();
             return Result.ok();
         } else {
-            return Result.error("Token无效!");
+            return Result.error("用户未登录!");
         }
     }
 
@@ -180,7 +178,7 @@ public class LoginController {
         // 生成token
         String token = JwtUtil.sign(username, sysPassword);
         // 设置token缓存有效时间
-        cacheManager.set(CommonConstant.PREFIX_USER_TOKEN + token, token, JwtUtil.EXPIRE_TIME);
+        zCache.put(CacheConstant.PREFIX_USER_TOKEN + token, token, JwtUtil.EXPIRE_TIME);
 
         // 获取用户部门信息
         Map<String, Object> obj = new HashMap<>(4);
@@ -210,7 +208,7 @@ public class LoginController {
     /**
      * 后台生成图形验证码 ：有效
      *
-     * @param key      String
+     * @param key String
      * @return Result<Object>
      */
     @ApiOperation("获取验证码")
@@ -221,7 +219,7 @@ public class LoginController {
             String code = RandomUtil.randomString(4);
             String lowerCaseCode = code.toLowerCase();
             String realKey = DigestUtils.md5DigestAsHex((lowerCaseCode + key).getBytes());
-            cacheManager.set(realKey, lowerCaseCode, 60 * 1000);
+            zCache.put(realKey, lowerCaseCode, 60 * 1000);
             String base64 = RandImageUtil.generate(code);
             res = Result.ok();
             res.setResult(base64);
@@ -250,7 +248,7 @@ public class LoginController {
             result.setSuccess(false);
             return result;
         }
-        Object object = cacheManager.get(mobile);
+        String object = zCache.get(mobile, String.class);
         if (object != null) {
             result.setMessage("验证码10分钟内，仍然有效！");
             result.setSuccess(false);
@@ -300,7 +298,7 @@ public class LoginController {
                 return result;
             }
             //验证码10分钟内有效
-            cacheManager.set(mobile, captcha, 600);
+            zCache.put(mobile, captcha, 600);
             result.setSuccess(true);
 
         } catch (Exception e) {
@@ -331,7 +329,7 @@ public class LoginController {
         }
 
         String smsCode = jsonObject.get("captcha");
-        Object code = cacheManager.get(phone);
+        Object code = zCache.get(phone, String.class);
         if (!smsCode.equals(code)) {
             result.setMessage("手机验证码错误");
             return result;
@@ -339,7 +337,7 @@ public class LoginController {
         //用户信息
         userInfo(sysUser, result);
         //添加日志
-        sysBaseAPI.addLog("用户名: " + sysUser.getUsername() + ",登录成功！", CommonConstant.LOG_TYPE_1,
+        logService.addLog("用户名: " + sysUser.getUsername() + ",登录成功！", CommonConstant.LOG_TYPE_1,
                 null, sysUser);
 
         return result;
@@ -360,7 +358,7 @@ public class LoginController {
         }
         String lowerCaseCaptcha = captcha.toLowerCase();
         String realKey = DigestUtils.md5DigestAsHex((lowerCaseCaptcha + checkKey).getBytes());
-        Object checkCode = cacheManager.get(realKey);
+        Object checkCode = zCache.get(realKey, String.class);
         if (checkCode == null || !checkCode.equals(lowerCaseCaptcha)) {
             return Result.error("验证码错误");
         }

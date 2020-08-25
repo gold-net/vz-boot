@@ -22,11 +22,10 @@ import org.z.common.system.vo.Result;
 import org.z.common.util.JwtUtil;
 import org.z.common.util.PasswordUtil;
 import org.z.common.util.RandomUtil;
-import org.z.component.cache.ZCacheManager;
+import org.z.component.cache.ZCache;
 import org.z.modules.shiro.ShiroUtils;
 import org.z.modules.system.entity.SysUser;
 import org.z.modules.system.entity.SysUserRole;
-import org.z.modules.system.service.ISysBaseAPI;
 import org.z.modules.system.service.ISysUserRoleService;
 import org.z.modules.system.service.ISysUserService;
 import org.z.modules.system.vo.SysUserRoleVO;
@@ -46,8 +45,6 @@ import java.util.*;
 @RestController
 @RequestMapping("/sys/user")
 public class SysUserController {
-    @Autowired
-    private ISysBaseAPI sysBaseAPI;
 
     @Autowired
     private ISysUserService sysUserService;
@@ -56,7 +53,7 @@ public class SysUserController {
     private ISysUserRoleService sysUserRoleService;
 
     @Autowired
-    private ZCacheManager cacheManager;
+    private ZCache zCache;
 
     /**
      * 获取用户列表数据
@@ -400,7 +397,7 @@ public class SysUserController {
         Result<Map<String, Object>> result = new Result<Map<String, Object>>();
         String phone = jsonObject.get("phone");
         String smscode = jsonObject.get("smscode");
-        Object code = cacheManager.get(phone);
+        String code = zCache.get(phone, String.class);
         String username = jsonObject.get("username");
         //未设置用户名，则用手机号作为用户名
         if (StringUtils.isEmpty(username)) {
@@ -507,13 +504,12 @@ public class SysUserController {
         Result<String> result = new Result<String>();
         String phone = jsonObject.get("phone");
         String smscode = jsonObject.get("smscode");
-        Object code = cacheManager.get(phone);
+        String code = zCache.get(phone, String.class);
         if (!smscode.equals(code)) {
             result.setMessage("手机验证码错误");
             result.setSuccess(false);
             return result;
         }
-        cacheManager.set(phone, smscode);
         result.setResult(smscode);
         result.setSuccess(true);
         return result;
@@ -535,7 +531,7 @@ public class SysUserController {
         }
 
         SysUser sysUser = new SysUser();
-        Object object = cacheManager.get(phone);
+        String object = zCache.get(phone, String.class);
         if (null == object) {
             result.setMessage("短信验证码失效！");
             result.setSuccess(false);

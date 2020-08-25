@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -64,7 +65,7 @@ public class QuartzJobController {
      * @param quartzJob
      * @return
      */
-    //@RequiresRoles({"admin"})
+    @RequiresRoles({"admin"})
     @AutoLog(value = "定时任务-添加")
     @RequestMapping(value = "/add", method = RequestMethod.POST)
     public Result<?> add(@RequestBody QuartzJob quartzJob) {
@@ -82,7 +83,7 @@ public class QuartzJobController {
      * @param quartzJob
      * @return
      */
-    //@RequiresRoles({"admin"})
+    @RequiresRoles({"admin"})
     @AutoLog(value = "定时任务-编辑")
     @RequestMapping(value = "/edit", method = RequestMethod.PUT)
     public Result<?> eidt(@RequestBody QuartzJob quartzJob) {
@@ -101,7 +102,7 @@ public class QuartzJobController {
      * @param id
      * @return
      */
-    //@RequiresRoles({"admin"})
+    @RequiresRoles({"admin"})
     @AutoLog(value = "定时任务-通过id删除")
     @RequestMapping(value = "/delete", method = RequestMethod.DELETE)
     public Result<?> delete(@RequestParam(name = "id", required = true) String id) {
@@ -120,7 +121,7 @@ public class QuartzJobController {
      * @param ids
      * @return
      */
-    //@RequiresRoles({"admin"})
+    @RequiresRoles({"admin"})
     @AutoLog(value = "定时任务-批量删除")
     @RequestMapping(value = "/deleteBatch", method = RequestMethod.DELETE)
     public Result<?> deleteBatch(@RequestParam(name = "ids", required = true) String ids) {
@@ -140,7 +141,7 @@ public class QuartzJobController {
      * @param jobClassName
      * @return
      */
-    //@RequiresRoles({"admin"})
+    @RequiresRoles({"admin"})
     @GetMapping(value = "/pause")
     @ApiOperation(value = "暂停定时任务")
     @AutoLog(value = "定时任务-暂停任务", operateType = CommonConstant.OPERATE_TYPE_3)
@@ -166,7 +167,7 @@ public class QuartzJobController {
      * @param jobClassName
      * @return
      */
-    //@RequiresRoles({"admin"})
+    @RequiresRoles({"admin"})
     @GetMapping(value = "/resume")
     @ApiOperation(value = "恢复定时任务")
     @AutoLog(value = "定时任务-恢复任务", operateType = CommonConstant.OPERATE_TYPE_3)
@@ -176,7 +177,6 @@ public class QuartzJobController {
             return Result.error("定时任务不存在！");
         }
         quartzJobService.resumeJob(job);
-        //scheduler.resumeJob(JobKey.jobKey(job.getJobClassName().trim()));
         return Result.ok();
     }
 

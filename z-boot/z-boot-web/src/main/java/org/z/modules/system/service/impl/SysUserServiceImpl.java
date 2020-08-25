@@ -7,12 +7,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.z.common.constant.CacheConstant;
 import org.z.common.constant.CommonConstant;
+import org.z.common.system.vo.LoginUser;
 import org.z.common.system.vo.Result;
 import org.z.common.util.PasswordUtil;
 import org.z.common.util.RandomUtil;
@@ -24,7 +27,7 @@ import org.z.modules.system.mapper.SysPermissionMapper;
 import org.z.modules.system.mapper.SysRoleMapper;
 import org.z.modules.system.mapper.SysUserMapper;
 import org.z.modules.system.mapper.SysUserRoleMapper;
-import org.z.modules.system.service.ISysBaseAPI;
+import org.z.modules.system.service.ISysLogService;
 import org.z.modules.system.service.ISysUserService;
 
 import java.util.*;
@@ -47,7 +50,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Autowired
     private SysUserRoleMapper sysUserRoleMapper;
     @Autowired
-    private ISysBaseAPI sysBaseAPI;
+    private ISysLogService logService;
     @Autowired
     private SysRoleMapper sysRoleMapper;
 
@@ -108,6 +111,21 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public SysUser getUserByName(String username) {
         return userMapper.getUserByName(username);
+    }
+
+    @Override
+    @Cacheable(cacheNames = CacheConstant.SYS_USERS_CACHE, key = "#username")
+    public LoginUser getLoginUserByName(String username) {
+        if (StringUtils.isEmpty(username)) {
+            return null;
+        }
+        LoginUser loginUser = new LoginUser();
+        SysUser sysUser = userMapper.getUserByName(username);
+        if (sysUser == null) {
+            return null;
+        }
+        BeanUtils.copyProperties(sysUser, loginUser);
+        return loginUser;
     }
 
 
@@ -209,39 +227,29 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         //情况1：根据用户信息查询，该用户不存在
         if (sysUser == null) {
             result.error500("该用户不存在，请注册");
-            sysBaseAPI.addLog("用户登录失败，用户不存在！", CommonConstant.LOG_TYPE_1, null, null);
+            logService.addLog("用户登录失败，用户不存在！", CommonConstant.LOG_TYPE_1, null, null);
             return result;
         }
         //情况2：根据用户信息查询，该用户已注销
         if (CommonConstant.DEL_FLAG_1.equals(sysUser.getDelFlag())) {
-            sysBaseAPI.addLog("用户登录失败，用户名:" + sysUser.getUsername() + "已注销！",
+            logService.addLog("用户登录失败，用户名:" + sysUser.getUsername() + "已注销！",
                     CommonConstant.LOG_TYPE_1, null, sysUser);
             result.error500("该用户已注销");
             return result;
         }
         //情况3：根据用户信息查询，该用户已冻结
         if (CommonConstant.USER_FREEZE.equals(sysUser.getStatus())) {
-            sysBaseAPI.addLog("用户登录失败，用户名:" + sysUser.getUsername() + "已冻结！",
+            logService.addLog("用户登录失败，用户名:" + sysUser.getUsername() + "已冻结！",
                     CommonConstant.LOG_TYPE_1, null, sysUser);
             result.error500("该用户已冻结");
             return result;
         }
-        result.setCode(CommonConstant.SC_OK_200);
         return result;
     }
 
     @Override
     public List<SysUser> queryLogicDeleted() {
-        return this.queryLogicDeleted(null);
-    }
-
-    @Override
-    public List<SysUser> queryLogicDeleted(LambdaQueryWrapper<SysUser> wrapper) {
-        if (wrapper == null) {
-            wrapper = new LambdaQueryWrapper<>();
-        }
-        wrapper.eq(SysUser::getDelFlag, "1");
-        return userMapper.selectLogicDeleted(wrapper);
+        return userMapper.selectLogicDeleted();
     }
 
     @Override

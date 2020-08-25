@@ -1,9 +1,7 @@
 package org.z.modules.system.mapper;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.toolkit.Constants;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Param;
 import org.z.modules.system.entity.SysUser;
@@ -27,24 +25,6 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
     SysUser getUserByName(@Param("username") String username);
 
     /**
-     * 根据部门Id查询用户信息
-     *
-     * @param page
-     * @param departId
-     * @return
-     */
-    IPage<SysUser> getUserByDepId(Page page, @Param("departId") String departId, @Param("username") String username);
-
-    /**
-     * 根据部门Ids,查询部门下用户信息
-     *
-     * @param page
-     * @param departIds
-     * @return
-     */
-    IPage<SysUser> getUserByDepIds(Page page, @Param("departIds") List<String> departIds, @Param("username") String username);
-
-    /**
      * 根据角色Id查询用户信息
      *
      * @param page
@@ -52,14 +32,6 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
      * @return
      */
     IPage<SysUser> getUserByRoleId(Page page, @Param("roleId") String roleId, @Param("username") String username);
-
-    /**
-     * 根据用户名设置部门ID
-     *
-     * @param username
-     * @param departId
-     */
-    void updateUserDepart(@Param("username") String username, @Param("orgCode") String orgCode);
 
     /**
      * 根据手机号查询用户信息
@@ -95,7 +67,7 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
     /**
      * 查询被逻辑删除的用户
      */
-    List<SysUser> selectLogicDeleted(@Param(Constants.WRAPPER) Wrapper<SysUser> wrapper);
+    List<SysUser> selectLogicDeleted();
 
     /**
      * 还原被逻辑删除的用户
@@ -106,12 +78,4 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
      * 彻底删除被逻辑删除的用户
      */
     int deleteLogicDeleted(@Param("userIds") List<String> userIds);
-
-    /**
-     * 根据部门Ids,查询部门下用户信息
-     *
-     * @param departIds
-     * @return
-     */
-    List<SysUser> queryByDepIds(@Param("departIds") List<String> departIds, @Param("username") String username);
 }

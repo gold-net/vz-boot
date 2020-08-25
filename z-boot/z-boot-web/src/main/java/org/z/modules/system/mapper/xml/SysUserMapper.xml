@@ -7,29 +7,6 @@
 		select * from  sys_user  where username = #{username} and del_flag = 0
 	</select>
 
-	<!-- 根据部门Id查询 -->
-	<select id="getUserByDepId" resultType="org.z.modules.system.entity.SysUser">
-		select * from sys_user where del_flag = 0 and id in (select user_id from sys_user_depart where dep_id=#{departId})
-		<if test="username!=null and username!=''">
-			and username = #{username}
-		</if>
-	</select>
-
-	<!-- 通过多个部门IDS，查询部门下的用户信息 -->
-	<select id="getUserByDepIds" resultType="org.z.modules.system.entity.SysUser">
-		select * from sys_user where del_flag = 0
-		<if test="departIds!=null  and departIds.size()>0">
-			and id in (select user_id from sys_user_depart where dep_id in
-			<foreach collection="departIds" index="index" item="id" open="(" separator="," close=")">
-				#{id}
-			</foreach>
-			)
-		</if>
-		<if test="username!=null and username!=''">
-			and username = #{username}
-		</if>
-	</select>
-
 	<!-- 根据角色Id查询 -->
 	<select id="getUserByRoleId" resultType="org.z.modules.system.entity.SysUser">
 		select * from sys_user where del_flag = 0 and id in (select user_id from sys_user_role where role_id=#{roleId})
@@ -37,11 +14,6 @@
 			and username = #{username}
 		</if>
 	</select>
-
-	<!--  修改用户部门code -->
-	<update id="updateUserDepart">
-		UPDATE sys_user SET org_code = #{orgCode} where username = #{username}
-	</update>
 
 	<!-- 根据手机号查询 -->
 	<select id="getUserByPhone"  resultType="org.z.modules.system.entity.SysUser">
@@ -73,7 +45,7 @@
 
 	<!-- 查询被逻辑删除的用户 -->
 	<select id="selectLogicDeleted" resultType="org.z.modules.system.entity.SysUser">
-		SELECT * FROM sys_user ${ew.customSqlSegment}
+		SELECT * FROM sys_user where del_flag = 1
 	</select>
 
 	<!-- 更新被逻辑删除的用户 -->
@@ -97,18 +69,4 @@
 		</foreach>
 	</delete>
 
-	<!-- 通过多个部门IDS，查询部门下的用户信息 -->
-	<select id="queryByDepIds" resultType="org.z.modules.system.entity.SysUser">
-		select * from sys_user where del_flag = 0
-		<if test="departIds!=null  and departIds.size()>0">
-			and id in (select user_id from sys_user_depart where dep_id in
-			<foreach collection="departIds" index="index" item="id" open="(" separator="," close=")">
-				#{id}
-			</foreach>
-			)
-		</if>
-		<if test="username!=null and username!=''">
-			and username != #{username}
-		</if>
-	</select>
 </mapper>

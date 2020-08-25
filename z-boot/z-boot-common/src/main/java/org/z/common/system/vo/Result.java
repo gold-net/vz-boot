@@ -4,14 +4,14 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
-import org.z.common.constant.CommonConstant;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.Serializable;
 
 /**
  * 接口返回数据格式
- * @author z
  *
+ * @author z
  */
 @Data
 @Accessors(chain = true)
@@ -36,7 +36,7 @@ public class Result<T> implements Serializable {
      * 返回代码
      */
     @ApiModelProperty(value = "返回代码")
-    private int code = CommonConstant.SC_OK_200;
+    private int code = HttpServletResponse.SC_OK;
 
     /**
      * 返回数据对象 data
@@ -50,7 +50,8 @@ public class Result<T> implements Serializable {
     @ApiModelProperty(value = "时间戳")
     private long timestamp = System.currentTimeMillis();
 
-    public Result() {}
+    public Result() {
+    }
 
     public static <T> Result<T> ok() {
         return new Result<>();
@@ -63,7 +64,7 @@ public class Result<T> implements Serializable {
     }
 
     public static <T> Result<T> error(String msg) {
-        return error(CommonConstant.SC_INTERNAL_SERVER_ERROR_500, msg);
+        return error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, msg);
     }
 
     public static <T> Result<T> error(int code, String msg) {
@@ -81,7 +82,7 @@ public class Result<T> implements Serializable {
 
     public Result<T> error500(String message) {
         this.message = message;
-        this.code = CommonConstant.SC_INTERNAL_SERVER_ERROR_500;
+        this.code = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
         this.success = false;
         return this;
     }

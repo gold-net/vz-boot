@@ -31,8 +31,7 @@ const err = (error) => {
         notification.error({message: '系统提示', description: '网络超时，请稍后重试'})
         break
       case 401:
-        const notLogin = window.location.href.indexOf('/user/login') < 0;
-        if (notLogin) {
+        if (window.location.href.indexOf('/user/login') < 0) {
           Modal.confirm({
             title: '系统提示',
             content: '登录已过期，请重新登录',
@@ -40,7 +39,7 @@ const err = (error) => {
             mask: false,
             onOk: () => {
               store.dispatch('Logout').then(() => {
-                if (notLogin) {
+                if (window.location.href.indexOf('/user/login') < 0) {
                   window.location.reload();
                 }
               })
@@ -83,8 +82,7 @@ service.interceptors.response.use((response) => {
     case 200:
       return response.data
     case 401:
-      const notLogin = window.location.href.indexOf('/user/login') < 0;
-      if (notLogin) {
+      if (window.location.href.indexOf('/user/login') < 0) {
         Modal.info({
           title: '系统提示',
           content: '登录已过期，请重新登录',
@@ -92,7 +90,7 @@ service.interceptors.response.use((response) => {
           mask: false,
           onOk: () => {
             store.dispatch('Logout').then(() => {
-              if (notLogin) {
+              if (window.location.href.indexOf('/user/login') < 0) {
                 window.location.reload();
               }
             })

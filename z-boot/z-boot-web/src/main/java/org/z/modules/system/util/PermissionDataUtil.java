@@ -3,11 +3,8 @@ package org.z.modules.system.util;
 import org.apache.commons.lang3.StringUtils;
 import org.z.modules.system.entity.SysPermission;
 
-import java.util.List;
-
 /**
- * @Author: scott
- * @Date: 2019-04-03
+ * @author z
  */
 public class PermissionDataUtil {
 
@@ -57,41 +54,6 @@ public class PermissionDataUtil {
             permission.setComponent("layouts/RouteView");
         }
         return permission;
-    }
-
-    /**
-     * 如果没有index页面 需要new 一个放到list中
-     *
-     * @param metaList
-     */
-    public static void addIndexPage(List<SysPermission> metaList) {
-        boolean hasIndexMenu = false;
-        for (SysPermission sysPermission : metaList) {
-            if ("首页".equals(sysPermission.getName())) {
-                hasIndexMenu = true;
-                break;
-            }
-        }
-        if (!hasIndexMenu) {
-            metaList.add(0, new SysPermission(true));
-        }
-    }
-
-    /**
-     * 判断是否授权首页
-     *
-     * @param metaList
-     * @return
-     */
-    public static boolean hasIndexPage(List<SysPermission> metaList) {
-        boolean hasIndexMenu = false;
-        for (SysPermission sysPermission : metaList) {
-            if ("首页".equals(sysPermission.getName())) {
-                hasIndexMenu = true;
-                break;
-            }
-        }
-        return hasIndexMenu;
     }
 
 }

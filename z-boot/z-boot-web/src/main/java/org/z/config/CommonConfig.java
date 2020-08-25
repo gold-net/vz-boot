@@ -2,13 +2,21 @@ package org.z.config;
 
 import org.springframework.boot.actuate.trace.http.HttpTraceRepository;
 import org.springframework.boot.actuate.trace.http.InMemoryHttpTraceRepository;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.z.component.cache.MemoryZCacheManager;
-import org.z.component.cache.ZCacheManager;
+import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.cache.RedisCacheWriter;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.z.component.cache.MemoryZCache;
+import org.z.component.cache.RedisZCache;
+import org.z.component.cache.ZCache;
 import org.z.component.spring.SpringContextHolder;
+
+import java.time.Duration;
 
 /**
  * @author zhangshuw
@@ -18,9 +26,9 @@ import org.z.component.spring.SpringContextHolder;
 @EnableCaching
 public class CommonConfig {
 
-    @Bean
-    public ZCacheManager cacheManager() {
-        return new MemoryZCacheManager();
+    //@Bean
+    public ZCache localCache() {
+        return new MemoryZCache();
     }
 
     @Bean
@@ -29,10 +37,26 @@ public class CommonConfig {
     }
 
     @Bean
-    //@Profile({"dev", "test"})
     public HttpTraceRepository httpTraceRepository() {
         return new InMemoryHttpTraceRepository();
     }
 
+    /**
+     * 缓存配置管理器
+     *
+     * @param factory RedisConnectionFactory
+     * @return CacheManager
+     */
+    @Bean
+    @Primary
+    public CacheManager cacheManager(RedisConnectionFactory factory) {
+        return new RedisCacheManager(RedisCacheWriter.nonLockingRedisCacheWriter(factory),
+                RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofDays(RedisZCache.EXPIRE_AFTER_ACCESS_DAYS)));
+    }
 
+    @Bean
+    @Primary
+    public ZCache zCache(RedisConnectionFactory factory) {
+        return new RedisZCache(factory);
+    }
 }

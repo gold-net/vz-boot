@@ -24,13 +24,6 @@ public interface SysDictMapper extends BaseMapper<SysDict> {
     String queryDictTextByKey(@Param("code") String code, @Param("key") String key);
 
     /**
-     * 查询所有部门 作为字典信息 id -->value,departName -->text
-     *
-     * @return
-     */
-    List<DictModel> queryAllDepartBackDictModel();
-
-    /**
      * 查询所有用户  作为字典信息 username -->value,realname -->text
      *
      * @return

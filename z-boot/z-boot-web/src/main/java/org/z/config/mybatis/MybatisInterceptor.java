@@ -45,9 +45,9 @@ public class MybatisInterceptor implements Interceptor {
                 try {
                     if ("createBy".equals(field.getName())) {
                         field.setAccessible(true);
-                        Object local_createBy = field.get(parameter);
+                        Object createBy = field.get(parameter);
                         field.setAccessible(false);
-                        if (local_createBy == null || local_createBy.equals("")) {
+                        if (createBy == null || "".equals(createBy)) {
                             if (sysUser != null) {
                                 // 登录人账号
                                 field.setAccessible(true);
@@ -59,55 +59,34 @@ public class MybatisInterceptor implements Interceptor {
                     // 注入创建时间
                     if ("createTime".equals(field.getName())) {
                         field.setAccessible(true);
-                        Object local_createDate = field.get(parameter);
+                        Object createDate = field.get(parameter);
                         field.setAccessible(false);
-                        if (local_createDate == null || local_createDate.equals("")) {
+                        if (createDate == null || "".equals(createDate)) {
                             field.setAccessible(true);
                             field.set(parameter, new Date());
                             field.setAccessible(false);
                         }
                     }
-                    //注入部门编码
-                    if ("sysOrgCode".equals(field.getName())) {
-                        field.setAccessible(true);
-                        Object local_sysOrgCode = field.get(parameter);
-                        field.setAccessible(false);
-                        if (local_sysOrgCode == null || local_sysOrgCode.equals("")) {
-                            // 获取登录用户信息
-                            if (sysUser != null) {
-                                field.setAccessible(true);
-                                field.set(parameter, sysUser.getOrgCode());
-                                field.setAccessible(false);
-                            }
-                        }
-                    }
-                } catch (Exception e) {
+                } catch (Exception ignored) {
                 }
             }
         }
         if (SqlCommandType.UPDATE == sqlCommandType) {
             LoginUser sysUser = this.getLoginUser();
-            Field[] fields = null;
+            Field[] fields;
             if (parameter instanceof ParamMap) {
                 ParamMap<?> p = (ParamMap<?>) parameter;
-                //update-begin-author:scott date:20190729 for:批量更新报错issues/IZA3Q--
                 if (p.containsKey("et")) {
                     parameter = p.get("et");
                 } else {
                     parameter = p.get("param1");
                 }
-                //update-end-author:scott date:20190729 for:批量更新报错issues/IZA3Q-
-
-                //update-begin-author:scott date:20190729 for:更新指定字段时报错 issues/#516-
                 if (parameter == null) {
                     return invocation.proceed();
                 }
-                //update-end-author:scott date:20190729 for:更新指定字段时报错 issues/#516-
 
-                fields = CommonUtil.getAllFields(parameter);
-            } else {
-                fields = CommonUtil.getAllFields(parameter);
             }
+            fields = CommonUtil.getAllFields(parameter);
 
             for (Field field : fields) {
                 log.debug("------field.name------" + field.getName());
@@ -127,7 +106,7 @@ public class MybatisInterceptor implements Interceptor {
                         field.setAccessible(false);
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error(e.getMessage(), e);
                 }
             }
         }

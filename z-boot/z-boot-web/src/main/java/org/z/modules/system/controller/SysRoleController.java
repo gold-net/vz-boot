@@ -21,6 +21,7 @@ import org.z.modules.system.service.ISysRolePermissionService;
 import org.z.modules.system.service.ISysRoleService;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 
 /**
@@ -169,7 +170,7 @@ public class SysRoleController {
         Result<List<SysRole>> result;
         List<SysRole> list = sysRoleService.list();
         if (list == null || list.size() <= 0) {
-            result = Result.error(CommonConstant.SC_OK_200, "未找到角色信息");
+            result = Result.error(HttpServletResponse.SC_OK, "未找到角色信息");
         } else {
             result = Result.ok(list);
         }
